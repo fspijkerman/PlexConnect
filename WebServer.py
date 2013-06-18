@@ -192,14 +192,10 @@ def Run(cmdQueue, param):
     try:
         while True:
             # check command
-            try:
-                # check command
-                cmd = cmdQueue.get_nowait()
+            if cmdQueue[1].poll():
+                cmd = cmdQueue[1].recv()
                 if cmd=='shutdown':
                     break
-            
-            except Queue.Empty:
-                pass
             
             # do your work (with timeout)
             server.handle_request()

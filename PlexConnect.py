@@ -11,7 +11,7 @@ inter-process-communication (queue): http://pymotw.com/2/multiprocessing/communi
 import sys, time
 from os import sep
 import socket
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Pipe
 
 import PlexGDM
 import DNSServer, WebServer
@@ -46,8 +46,8 @@ if __name__=="__main__":
     dinit('PlexConnect', param)  # re-init logfile with loglevel
     
     if cfg.getSetting('enable_dnsserver')=='True':
-        cmd_DNSServer = Queue()
-    cmd_WebServer = Queue()
+        cmd_DNSServer = Pipe()
+    cmd_WebServer = Pipe()
     
     param['IP_self'] = getIP_self()
     param['IP_DNSMaster'] = cfg.getSetting('ip_dnsmaster')
@@ -85,7 +85,7 @@ if __name__=="__main__":
     if not p_WebServer.is_alive():
         dprint('PlexConnect', 0, "WebServer not alive. Shutting down.")
         if cfg.getSetting('enable_dnsserver')=='True':
-            cmd_DNSServer.put('shutdown')
+            cmd_DNSServer[0].send('shutdown')
             p_DNSServer.join()
         sys.exit(1)
     
@@ -97,8 +97,8 @@ if __name__=="__main__":
     finally:
         dprint('PlexConnect', 0,  "Shutting down.")
         if cfg.getSetting('enable_dnsserver')=='True':
-            cmd_DNSServer.put('shutdown')
+            cmd_DNSServer[0].send('shutdown')
             p_DNSServer.join()
         
-        cmd_WebServer.put('shutdown')
+        cmd_WebServer[0].send('shutdown')
         p_WebServer.join()
